@@ -4,3 +4,4 @@ This is my test
 This is test 2 files
 update once
 >>>>>>> testing
+new text added
