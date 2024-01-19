@@ -17,7 +17,8 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 output application/json
 ---
 {
-	Message: "hello"
+  "message" : "hello",
+	"data" : "country" 
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
