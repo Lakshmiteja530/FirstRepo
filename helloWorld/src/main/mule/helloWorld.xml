@@ -11,6 +11,14 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	<flow name="helloWorld" doc:id="cf07428e-ec1c-44d3-87b9-03ab8851927a" >
 		<http:listener doc:name="Listener" doc:id="9920533c-d6b3-4097-ab44-e424cd237e50" config-ref="HTTP_Listener_config" path="/error"/>
 		<set-variable value='" world "' doc:name="Set Variable" doc:id="409c2b4d-a93d-41be-8982-ac3dba372923" variableName="hello"/>
+		<ee:transform doc:name="Transform Message" doc:id="79cc2ba5-b182-4f89-bc9a-0ad346505920" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="27bb2abf-e0c5-4773-9181-4d1410f67002" message="#[vars.hello]"/>
 	</flow>
 </mule>
