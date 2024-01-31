@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="gorestPostFlow" doc:id="32d798f8-750c-42a6-b9a8-2d98bdb240df" >
+		<http:listener doc:name="Listener" doc:id="f979d56b-87e4-4dd9-acd7-d5afdd245f7f" config-ref="HTTP_Listener_config" path="/gorestPost"/>
+		<http:request method="POST" doc:name="Request" doc:id="2ae24cdc-75c8-4859-95f7-78a47ad50656" config-ref="HTTP_Request_configuration" path="${goRest.path}" requestStreamingMode="NEVER">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"access-token" : "edc57c0ab599d0bc9dcf6aa71320e6107fa18213cea5da6977954af36ff015b6"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"Key" : "Value"
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="payload" doc:id="bb0c432b-6706-41b5-9764-1deba203ba15" message='#[payload]'/>
+		<file:write doc:name="Write" doc:id="b342fb66-0dfb-43ff-8193-640b58b854b0" config-ref="File_Config" path="C:\MULE\M1\New\file1.txt"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d1749d1a-a365-416c-a042-5d3b9bd7bde2" message='#["log ENDS"]'/>
+	</flow>
+</mule>

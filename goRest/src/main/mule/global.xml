@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="0ef9458b-df5d-495c-b2e5-d6fc58632a25" responseTimeout="3000000">
+		<http:request-connection protocol="HTTPS" host="${goRest.host}" connectionIdleTimeout="3000000"/>
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="e9c19ebc-fb27-4fc0-874f-4186a64a1730" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Teja&amp;530" database="employee_info" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="f0a6585d-3ae9-4ab0-830f-077eced4fd65" file="config.yaml" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="6c09b39c-dc34-40c1-9bc5-a496717ef406" >
+		<file:connection workingDir="C:\MULE\M1\New" />
+	</file:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3151b192-5f3a-4134-a715-ef55b299c62e" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+</mule>

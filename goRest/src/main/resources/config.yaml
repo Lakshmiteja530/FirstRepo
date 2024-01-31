@@ -1,0 +1,4 @@
+goRest:
+  host: gorest.co.in
+  path: /public/v2/users
+  
