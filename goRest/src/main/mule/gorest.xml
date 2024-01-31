@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="821c88ba-975d-4051-9682-9fadf70a0073">
+		<vm:queues >
+			<vm:queue queueName="myQueue" />
+		</vm:queues>
+	</vm:config>
+	<flow name="initializationFlow" doc:id="f7a9cd99-79c1-4073-b76c-826e3e324640" >
+		<http:listener doc:name="Listener" doc:id="b41bc7c0-89dc-4b91-88dd-4b575750d600" config-ref="HTTP_Listener_config" path="/gorest"/>
+		<logger level="INFO" doc:name="flow initialises" doc:id="86dc5e7a-4b32-4eb5-bdce-317c27bd4153" />
+		<set-variable value="1" doc:name="set page is 1" doc:id="80149f00-ad21-4aec-81d9-596086d95b85" variableName="page" />
+		<set-variable value="0" doc:name="set count 0" doc:id="2af156a6-ccea-4505-a295-7b0e8c9723e6" variableName="count" />
+		<flow-ref doc:name="call goRestOutBoundCallFlow" doc:id="88ff8fc9-b77a-40a3-baa0-a707b69ff5e8" name="goRestOutBoundCallFlow"/> 
+	
+</flow>
+	<flow name="goRestOutBoundCallFlow" doc:id="acf69517-74fb-425e-823a-eec53a99a634" >
+		<http:request method="GET" doc:name="gorest outBound call " doc:id="ea5b09ee-3499-471f-8084-136223f987dd" config-ref="HTTP_Request_configuration" path="${goRest.path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"page" : vars.page,
+	"per_page" : 100
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="playload is 0?" doc:id="cdc43cdc-877e-4ab2-a4b9-67ef335e255e" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<logger level="INFO" doc:name="payload Is &gt;0" doc:id="f450b8c2-05f0-47ee-9c7e-38628e586277" message='"payload size is" : #[sizeOf(payload)]'/>
+				<vm:publish doc:name="publish payload and variables to queue" doc:id="0d780c6a-6724-4bb7-90b0-9b20473359fe" config-ref="VM_Config" queueName="myQueue">
+					<vm:content ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	body: payload,
+	page: vars.page,
+	count: vars.count
+}]]]></vm:content>
+				</vm:publish>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="payload is 0" doc:id="b9986742-02b0-4c98-90a8-c715c641e4ec" message='"There is no Payload "'/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="dataBaseInsertionFlow" doc:id="62a9db99-2a6c-4abd-8695-f2caebca26b3" >
+		<vm:listener doc:name="listener" doc:id="04cb7997-0686-4d31-b74c-1090fd51228c" config-ref="VM_Config" queueName="myQueue"/>
+		<ee:transform doc:name="records mapping, count, page, payloadSize" doc:id="05ce19e3-6bc8-4d8a-86ce-52ee98421210">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+  payload.body map((items,index)->
+    {
+    	
+	gender:items.gender,
+	name: items.name,
+	empId: items.id,
+	email:items.email,
+	status: items.status ++"_"++ items.id	
+    }
+    )]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="count" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.count]]></ee:set-variable>
+				<ee:set-variable variableName="page" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.page]]></ee:set-variable>
+				<ee:set-variable variableName="payloadSize" ><![CDATA[%dw 2.0
+output application/json
+---
+sizeOf(payload.body)]]></ee:set-variable>
+			</ee:variables>
+		
+</ee:transform>
+		<logger level="INFO" doc:name="log payload size &amp; page" doc:id="5b6a3b74-ae54-4e1f-b83c-f949f77d5cc2" message="page is : #[vars.page] and payload size is : #[vars.payloadSize]" />
+		<foreach doc:name="for each" doc:id="2b4a47a0-6ef4-47a1-b498-99fbe0565930">
+			<db:insert doc:name="insert emp records into DB" doc:id="f0f70f1c-cb64-4a61-9343-d7677632da48" config-ref="Database_Config">
+				<db:sql><![CDATA[insert into employee_info.emp(idEmp,name,gender,email,status)values (:idEmp,:name,:gender,:email,:status)]]></db:sql>
+						<db:input-parameters><![CDATA[#[{
+	idEmp: payload.empId,
+	name: payload.name,
+	gender: payload.gender,
+	email: payload.email,
+	status: payload.status
+	
+}]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+		<set-variable doc:name="records count" doc:id="274c96ac-16d4-4d37-85cb-b1ebea667eda" variableName="count" value="#[vars.payloadSize + vars.count]"/>
+		<logger level="INFO" doc:name="log records count" doc:id="55fe9cc6-919a-4ab1-8a05-cc1e09f8deff" message='"count of payload is :" #[vars.count]'/>
+		<choice doc:name="is payload size &gt;=100 ?" doc:id="d17f46c4-4928-4db0-ba99-69c35de1a770" >
+			<when expression="#[vars.payloadSize&gt;=100]">
+				<set-variable value="#[vars.page + 1]" doc:name="page increment" doc:id="697eec60-9d2b-45d9-9eff-f66e106c0e6c" variableName="page" />
+				<flow-ref doc:name="call goRest outBound " doc:id="6ea7e1aa-7597-4098-bbe8-054774343a73" name="goRestOutBoundCallFlow" targetValue="#[vars.page]"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="end" doc:id="0697c8fa-cf0a-4dd3-a025-91bf82658a88" message='" There is no records"'/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
